@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Storage;
 use App\Models\FotoPessoa;
+use App\Models\Traits;
 use App\Repositories\FotoPessoaRepository;
 use App\Repositories\PessoaRepository;
 use Aws\S3\Exception\S3Exception;
@@ -16,12 +17,14 @@ class FotoPessoaController extends Controller
     private PessoaRepository $pessoaRepository;
     private FotoPessoaRepository $fotoPessoaRepository;
     private FotoPessoa $fotoPessoa;
+    private Traits $trais;
 
-    public function __construct(PessoaRepository $pessoaRepository, FotoPessoa $fotoPessoa, FotoPessoaRepository $fotoPessoaRepository)
+    public function __construct(PessoaRepository $pessoaRepository, FotoPessoa $fotoPessoa, FotoPessoaRepository $fotoPessoaRepository, Traits $trais)
     {
         $this->pessoaRepository = $pessoaRepository;
         $this->fotoPessoaRepository = $fotoPessoaRepository;
         $this->fotoPessoa = $fotoPessoa;
+        $this->trais = $trais;
     }
 
 
@@ -68,25 +71,8 @@ class FotoPessoaController extends Controller
         $extensao = 'png';
         $caminho = "pessoas/{$foto->pes_id}/{$foto->fp_hash}.{$extensao}";
 
-        $customS3 = new S3Client([
-            'version' => 'latest',
-            'region' => config('filesystems.disks.s3.region'),
-            'endpoint' => config('filesystems.disks.s3.url'), // Já usa o endpoint público
-            'credentials' => [
-                'key' => config('filesystems.disks.s3.key'),
-                'secret' => config('filesystems.disks.s3.secret'),
-            ],
-            'use_path_style_endpoint' => true,
-        ]);
-    
-        $comando = $customS3->getCommand('GetObject', [
-            'Bucket' => config('filesystems.disks.s3.bucket'),
-            'Key' => $caminho
-        ]);
-    
-        $request = $customS3->createPresignedRequest($comando, '+5 minutes');
-        $url = (string) $request->getUri();
-    
+        $url = $this->trais->generatePresignedUrl($caminho);
+
         return response()->json([
             'url' => $url,
             'expira_em' => now()->addMinutes(5)->toDateTimeString()
@@ -103,24 +89,8 @@ class FotoPessoaController extends Controller
         foreach ($fotos as $foto) {
             $caminho = "pessoas/{$foto->pes_id}/{$foto->fp_hash}.{$extensao}";
 
-            $customS3 = new S3Client([
-                'version' => 'latest',
-                'region' => config('filesystems.disks.s3.region'),
-                'endpoint' => config('filesystems.disks.s3.url'), // Já usa o endpoint público
-                'credentials' => [
-                    'key' => config('filesystems.disks.s3.key'),
-                    'secret' => config('filesystems.disks.s3.secret'),
-                ],
-                'use_path_style_endpoint' => true,
-            ]);
-        
-            $comando = $customS3->getCommand('GetObject', [
-                'Bucket' => config('filesystems.disks.s3.bucket'),
-                'Key' => $caminho
-            ]);
-        
-            $request = $customS3->createPresignedRequest($comando, '+5 minutes');
-            $url = (string) $request->getUri();
+            $url = $this->trais->generatePresignedUrl($caminho);
+            
             $links[] = $url;
         }
 

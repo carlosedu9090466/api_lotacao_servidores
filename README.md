@@ -14,3 +14,11 @@ docker exec -it api_lotacao_servidores-master-app-1 php artisan migrate
 
 docker exec -it api_lotacao_servidores-master-app-1 php artisan db:seed --class=AdminUserSeeder 
 
+## 3 - entre no localhost:90001 e digite as credenciais para acessar o MinIO bucket 
+
+## Username = minioadmin
+
+## Password = minioadmin
+
+## 4 - crie um bucket chamado laravel 
+## com isso pode salvar as imagens das pessoas no bucket pela rota da api.

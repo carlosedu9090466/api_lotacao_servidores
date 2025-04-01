@@ -39,6 +39,8 @@ Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
     Route::post('/pessoa/{pes_id}/fotos', [FotoPessoaController::class, 'upload']);
     Route::get('/pessoa/fotos/{foto_id}', [FotoPessoaController::class, 'getFoto']);
 
+    Route::get('/pessoa/fotos/todas/{pes_id}',[FotoPessoaController::class, 'getFotosAllPessoaById']);
+
     /************END FOTOD********************************************** */
 
 

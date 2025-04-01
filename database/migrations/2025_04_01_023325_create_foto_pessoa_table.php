@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id('fp_id');
             $table->unsignedBigInteger('pes_id');
             $table->date('fp_data');
-            $table->string('fp_bucket');
-            $table->string('fp_hash');        
+            $table->string('fp_bucket',50);
+            $table->string('fp_hash',50);        
             $table->timestamps();
 
             $table->foreign('pes_id')->references('pes_id')->on('pessoa')->onDelete('cascade');

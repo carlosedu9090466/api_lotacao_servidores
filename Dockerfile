@@ -19,7 +19,7 @@ WORKDIR /var/www/html
 COPY . .
 
 # Instala dependências (ignorando plataforma para evitar conflitos)
-RUN composer install --ignore-platform-reqs
+#RUN composer install --ignore-platform-reqs
 
 # Configura o VirtualHost do Apache
 RUN echo "\

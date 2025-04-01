@@ -20,7 +20,7 @@ Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
 
 
 //PROTEÇÃO ROTAS
-//Route::middleware(['jwt.expiration'])->group(function () {
+Route::middleware(['jwt.expiration'])->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout']);
 
@@ -91,4 +91,4 @@ Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
     /*****************END ROTAS DE LOTACAO**************** */
    
   
-//});
+});

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pagination;
 use App\Models\UnidadeEndereco;
 use App\Repositories\UnidadeEnderecoRepository;
 use Illuminate\Http\Request;
@@ -11,23 +12,30 @@ class UnidadeEnderecoController extends Controller
 
     private UnidadeEnderecoRepository $unidadeEnderecoRepository;
     private UnidadeEndereco $unidadeEndereco;
+    private Pagination $pagination;
 
-    public function __construct(UnidadeEnderecoRepository $unidadeEnderecoRepository, UnidadeEndereco $unidadeEndereco)
+    public function __construct(UnidadeEnderecoRepository $unidadeEnderecoRepository, UnidadeEndereco $unidadeEndereco, Pagination $pagination)
     {
         $this->unidadeEnderecoRepository = $unidadeEnderecoRepository;
         $this->unidadeEndereco = $unidadeEndereco;
+        $this->pagination = $pagination;
     }
 
-    public function index(){
+    public function index(Request $request)
+    {
+        $perPage = $request->get('per_page', 15);
+        $page = $request->get('page', 1);
 
-        $unidadeEndereco = $this->unidadeEnderecoRepository->getAllUnidadeEnderecoCidade();
-        $messagem = $unidadeEndereco->isEmpty() ? 'Nenhuma cidade x endereço encontrada.' : 'Cidades x Endereço listadas com sucesso.';
+        $unidadeEndereco = $this->unidadeEnderecoRepository->getAllUnidadeEnderecoCidade($perPage, $page);
 
-        return response()->json([
-            'data' => $unidadeEndereco,
-            'message' => $messagem
-        ], 200);
+        $message = $unidadeEndereco->isEmpty()
+            ? 'Nenhuma unidade com endereço encontrada.'
+            : 'Unidades com endereços listadas com sucesso.';
 
+        return response()->json(
+            $this->pagination->format($unidadeEndereco, $message),
+            200
+        );
     }
 
     public function store(Request $request)
@@ -38,7 +46,7 @@ class UnidadeEnderecoController extends Controller
         }
 
         //validação caso a unidade já possua endereço a vinculado.
-        if($this->unidadeEnderecoRepository->existsUnidadeEndereco($request->unid_id)){
+        if ($this->unidadeEnderecoRepository->existsUnidadeEndereco($request->unid_id)) {
             return response()->json([
                 'message' => 'Esta unidade já possui um endereço cadastrado.'
             ], 422);
@@ -51,47 +59,64 @@ class UnidadeEnderecoController extends Controller
         ], 201);
     }
 
-    public function update(Request $request, $id_unidade){
-      
+    public function update(Request $request, $id_unidade)
+    {
+
         $erroValidacaoID = $this->unidadeEndereco->validarId($id_unidade);
-        if($erroValidacaoID){
+        if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
-        
-        $unidadeEnderecoAtualizado = $this->unidadeEnderecoRepository->updateUnidadeEndereco($id_unidade,$request->all());
+
+        $unidadeEnderecoAtualizado = $this->unidadeEnderecoRepository->updateUnidadeEndereco($id_unidade, $request->all());
         if (!$unidadeEnderecoAtualizado) {
             return response()->json([
                 'message' => 'Vinculo entre a Unidade e endereço não encontrado.'
             ], 404);
         }
-        
+
         return response()->json([
             'data' => $unidadeEnderecoAtualizado,
             'message' => 'Vínculo atualizado com sucesso!'
         ]);
-
     }
 
-    public function getEnderecoByUnidade($id_unidade){
-        
+    public function getEnderecoByUnidade($id_unidade, Request $request)
+    {
+        // Validação do ID
         $erroValidacaoID = $this->unidadeEndereco->validarId($id_unidade);
-        if($erroValidacaoID){
+        if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
-        
-        $unidade = $this->unidadeEnderecoRepository->getEnderecoByIdUnidade($id_unidade);
 
-        if(!$unidade){
+        $perPage = $request->get('per_page', 15);
+        $page = $request->get('page', 1);
+
+        $resultado = $this->unidadeEnderecoRepository->getEnderecoByIdUnidade($id_unidade, $perPage, $page);
+
+        if (!$resultado['unidade']) {
             return response()->json(['message' => 'Unidade não encontrada'], 404);
         }
 
         return response()->json([
-            'data' => $unidade,
-            'message' => 'Unidade Encontrada com o seu endereço.'
-        ]);
-        
+            'data' => [
+                'unidade' => $resultado['unidade'],
+                'enderecos' => $resultado['unidade']->enderecos,
+                'meta' => [
+                    'current_page' => $resultado['pagination']['current_page'],
+                    'per_page' => $resultado['pagination']['per_page'],
+                    'total' => $resultado['pagination']['total'],
+                    'last_page' => ceil($resultado['pagination']['total'] / $resultado['pagination']['per_page'])
+                ],
+                'links' => [
+                    'first' => url("/api/unidades/{$id_unidade}/enderecos?page=1"),
+                    'last' => url("/api/unidades/{$id_unidade}/enderecos?page=" . ceil($resultado['pagination']['total'] / $resultado['pagination']['per_page'])),
+                    'prev' => $page > 1 ? url("/api/unidades/{$id_unidade}/enderecos?page=" . ($page - 1)) : null,
+                    'next' => $page < ceil($resultado['pagination']['total'] / $resultado['pagination']['per_page']) ?
+                        url("/api/unidades/{$id_unidade}/enderecos?page=" . ($page + 1)) : null
+                ]
+            ],
+            'message' => 'Unidade encontrada com seus endereços.'
+        ], 200);
     }
-
-    //FALTA FAZER O DELETE DESSE MODEL UnidadeEndereco
 
 }

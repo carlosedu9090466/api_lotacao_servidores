@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Endereco;
+use App\Models\Pagination;
 use App\Repositories\EnderecoRepository;
 use Illuminate\Http\Request;
 
@@ -10,23 +11,30 @@ class EnderecoController extends Controller
 {
     private EnderecoRepository $enderecoRepository;
     private Endereco $endereco;
+    private Pagination $pagination;
 
-    public function __construct(EnderecoRepository $enderecoRepository, Endereco $endereco)
+    public function __construct(EnderecoRepository $enderecoRepository, Endereco $endereco, Pagination $pagination)
     {
         $this->enderecoRepository = $enderecoRepository;
         $this->endereco = $endereco;
+        $this->pagination = $pagination;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $endereco = $this->enderecoRepository->getAllEndereco();
 
-        $messagem = $endereco->isEmpty() ? 'Nenhum endereço encontrada.' : 'Endereços listados com sucesso.';
+        $enderecos = $this->enderecoRepository->getAllEndereco(
+            $request->get('per_page', 10),
+            $request->get('page', 1)
+        );
 
-        return response()->json([
-            'data' => $endereco,
-            'message' => $messagem
-        ], 200);
+        return response()->json(
+            $this->pagination->format(
+                $enderecos,
+                $enderecos->isEmpty() ? 'Nenhum endereço encontrado.' : 'Endereços listados com sucesso.'
+            ),
+            200
+        );
     }
 
 

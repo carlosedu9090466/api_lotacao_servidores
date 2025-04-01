@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pagination;
 use App\Models\ServidorTemporario;
 use App\Models\ValidacaoId;
 use App\Repositories\ServidorTemporarioRepository;
@@ -12,43 +13,56 @@ class ServidorTemporarioController extends Controller
     private ServidorTemporarioRepository $servidorTemporarioRepository;
     private ServidorTemporario $servidorTemporario;
     private ValidacaoId $validacaoId;
+    private Pagination $pagination;
 
-    public function __construct(ServidorTemporarioRepository $servidorTemporarioRepository, ServidorTemporario $servidorTemporario, ValidacaoId $validacaoId)
+    public function __construct(ServidorTemporarioRepository $servidorTemporarioRepository, ServidorTemporario $servidorTemporario, ValidacaoId $validacaoId, Pagination $pagination)
     {
         $this->servidorTemporarioRepository = $servidorTemporarioRepository;
         $this->servidorTemporario = $servidorTemporario;
         $this->validacaoId = $validacaoId;
+        $this->pagination = $pagination;
     }
-    
+
     //todos os temporarios vinculados
-    public function getAllServidoresTemporarios(){
-      
-        $servidoresTemporarios = $this->servidorTemporarioRepository->getAllServidorTemporario();
+    public function getAllServidoresTemporarios(Request $request)
+    {
+        $perPage = $request->get('per_page', 15);
+        $page = $request->get('page', 1);
 
-        $messagem = $servidoresTemporarios->isEmpty() ? 'Nenhuma servidor temporario encontrado.' : 'Servidores temporario listadas com sucesso.';
+        $servidoresTemporarios = $this->servidorTemporarioRepository->getAllServidorTemporario($perPage, $page);
 
-        return response()->json([
-            'data' => $servidoresTemporarios,
-            'message' => $messagem
-        ], 200);
+        $message = $servidoresTemporarios->isEmpty()
+            ? 'Nenhum servidor temporário encontrado.'
+            : 'Servidores temporários listados com sucesso.';
 
+        return response()->json(
+            $this->pagination->format($servidoresTemporarios, $message),
+            200
+        );
     }
 
-    public function getServidoresTemporariosPorUnidade($id_unidade){
-
+    public function getServidoresTemporariosPorUnidade($id_unidade, Request $request)
+    {
+        // Validação do ID
         $erroValidacaoID = $this->validacaoId->validarId($id_unidade);
-        if($erroValidacaoID){
+        if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
-        $servidoresTemporarioPorUnidade = $this->servidorTemporarioRepository->getServidoresTemporariosPorUnidade($id_unidade);
-        
-        $messagem = $servidoresTemporarioPorUnidade->isEmpty() ? 'Nenhuma servidor temporario encontrado.' : 'Servidores temporarios listadas com sucesso.';
 
-        return response()->json([
-            'data' => $servidoresTemporarioPorUnidade,
-            'message' => $messagem
-        ], 200);
+        $perPage = $request->get('per_page', 15);
+        $page = $request->get('page', 1);
 
+        $servidoresTemporarioPorUnidade = $this->servidorTemporarioRepository
+            ->getServidoresTemporariosPorUnidade($id_unidade, $perPage, $page);
+
+        $message = $servidoresTemporarioPorUnidade->isEmpty()
+            ? 'Nenhum servidor temporário encontrado.'
+            : 'Servidores temporários listados com sucesso.';
+
+        return response()->json(
+            $this->pagination->format($servidoresTemporarioPorUnidade, $message),
+            200
+        );
     }
 
     public function store(Request $request)
@@ -63,7 +77,7 @@ class ServidorTemporarioController extends Controller
                 'message' => 'Esta pessoa já possui o status de servidor temporario.'
             ], 422);
         }
-       
+
         $servidor_temporario = $this->servidorTemporarioRepository->createServidorTemporario($request);
         return response()->json([
             'data' => $servidor_temporario,
@@ -72,38 +86,39 @@ class ServidorTemporarioController extends Controller
     }
 
 
-    public function update(Request $request, $id_pessoa){
-      
+    public function update(Request $request, $id_pessoa)
+    {
+
         $erroValidacaoID = $this->servidorTemporario->validarId($id_pessoa);
-        if($erroValidacaoID){
+        if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
-        
+
         $validacaoDados = $this->servidorTemporario->validarDados($request->all());
         if ($validacaoDados) {
             return response()->json($validacaoDados, 422);
         }
-      
-        $servidorTemporarioAtualizado = $this->servidorTemporarioRepository->updateServidorTemporario($id_pessoa,$request->all());
+
+        $servidorTemporarioAtualizado = $this->servidorTemporarioRepository->updateServidorTemporario($id_pessoa, $request->all());
 
         if (!$servidorTemporarioAtualizado) {
             return response()->json([
                 'message' => 'O servidor não foi encontrado no sistema.'
             ], 404);
         }
-        
+
         return response()->json([
             'data' => $servidorTemporarioAtualizado,
             'message' => 'As datas foram atualizadas com sucesso!'
         ]);
-
     }
 
 
-    public function destroy($id_pessoa){
+    public function destroy($id_pessoa)
+    {
 
         $erroValidacaoID = $this->servidorTemporario->validarId($id_pessoa);
-        if($erroValidacaoID){
+        if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
 
@@ -117,7 +132,5 @@ class ServidorTemporarioController extends Controller
         return response()->json([
             'message' => 'Servidor temporario deletado com sucesso!'
         ]);
-
     }
-
 }

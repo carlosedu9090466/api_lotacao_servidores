@@ -23,44 +23,39 @@ class ServidorTemporarioRepository
         return ServidorTemporario::where('pes_id', $id_pessoa)->first();
     }
 
-    public function getAllServidorTemporario()
+    public function getAllServidorTemporario($perPage = 15, $page = 1)
     {
-        $todosServidoresTemporarios = Pessoa::whereHas('servidorTemporario')
-        ->with(['lotacao.unidadeLotacao', 'servidorTemporario'])
-        ->get()
-        ->map(function ($pessoa) {
-            return [
-                'nome' => $pessoa->pes_nome,
-                'idade' => Pessoa::calcularIdade($pessoa->pes_data_nascimento),
-                'unidade' => $pessoa->lotacao->unidadeLotacao->unid_nome ?? 'Sem unidade definida',
-                //'matricula' => $pessoa->servidorEfetivo->se_matricula,
-                'fotografia' => $pessoa->fotografia ?? null
-            ];
-        });
-
-        return $todosServidoresTemporarios;
+        return Pessoa::whereHas('servidorTemporario')
+            ->with(['lotacao.unidadeLotacao', 'servidorTemporario'])
+            ->orderBy('pes_nome') // Adicionando ordenação por nome
+            ->paginate($perPage, ['*'], 'page', $page)
+            ->through(function ($pessoa) {
+                return [
+                    'nome' => $pessoa->pes_nome,
+                    'idade' => Pessoa::calcularIdade($pessoa->pes_data_nascimento),
+                    'unidade' => $pessoa->lotacao->unidadeLotacao->unid_nome ?? 'Sem unidade definida',
+                    'fotografia' => $pessoa->fotografia ?? null
+                ];
+            });
     }
 
-    public function getServidoresTemporariosPorUnidade($unid_id)
+    public function getServidoresTemporariosPorUnidade($unid_id, $perPage = 15, $page = 1)
     {
-        $servidoresTemporarios = Pessoa::whereHas('lotacao', function ($query) use ($unid_id) {
+        return Pessoa::whereHas('lotacao', function ($query) use ($unid_id) {
             $query->where('unid_id', $unid_id);
         })
-        ->whereHas('servidorTemporario')
-        ->with(['lotacao.unidadeLotacao', 'servidorTemporario'])
-        ->get()
-        ->map(function ($pessoa) {
-            return [
-                'nome' => $pessoa->pes_nome,
-                'idade' => Pessoa::calcularIdade($pessoa->pes_data_nascimento),
-                'unidade' => $pessoa->lotacao->unidadeLotacao->unid_nome ?? null,
-                //'matricula' => $pessoa->servidorEfetivo->se_matricula,
-                'fotografia' => $pessoa->fotografia ?? null
-            ];
-        });
-
-        return $servidoresTemporarios;
-
+            ->whereHas('servidorTemporario')
+            ->with(['lotacao.unidadeLotacao', 'servidorTemporario'])
+            ->orderBy('pes_nome') // Ordenação por nome
+            ->paginate($perPage, ['*'], 'page', $page)
+            ->through(function ($pessoa) {
+                return [
+                    'nome' => $pessoa->pes_nome,
+                    'idade' => Pessoa::calcularIdade($pessoa->pes_data_nascimento),
+                    'unidade' => $pessoa->lotacao->unidadeLotacao->unid_nome ?? null,
+                    'fotografia' => $pessoa->fotografia ?? null
+                ];
+            });
     }
 
 

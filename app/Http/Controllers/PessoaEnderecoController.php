@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pagination;
 use App\Models\PessoaEndereco;
 use App\Repositories\PessoaEnderecoRepository;
 use Illuminate\Http\Request;
@@ -11,25 +12,32 @@ class PessoaEnderecoController extends Controller
 
     private PessoaEnderecoRepository $pessoaEnderecoRepository;
     private PessoaEndereco $pessoaEndereco;
+    private Pagination $pagination;
 
-    public function __construct(PessoaEnderecoRepository $pessoaEnderecoRepository, PessoaEndereco $pessoaEndereco)
+    public function __construct(PessoaEnderecoRepository $pessoaEnderecoRepository, PessoaEndereco $pessoaEndereco,  Pagination $pagination)
     {
         $this->pessoaEnderecoRepository = $pessoaEnderecoRepository;
         $this->pessoaEndereco = $pessoaEndereco;
+        $this->pagination = $pagination;
     }
 
-    public function index(){
+    public function index(Request $request)
+{
+    $perPage = $request->get('per_page', 15);
+    $page = $request->get('page', 1);
 
-        $pessoaEndereco = $this->pessoaEnderecoRepository->getAllPessoaEndereco();
-        $messagem = $pessoaEndereco->isEmpty() ? 'Nenhuma pessoa x endereço encontrada.' : 'Pessoas x Endereço listadas com sucesso.';
+    
+    $pessoaEndereco = $this->pessoaEnderecoRepository->getAllPessoaEndereco($perPage, $page);
 
-        return response()->json([
-            'data' => $pessoaEndereco,
-            'message' => $messagem
-        ], 200);
-
-    }
-
+    $message = $pessoaEndereco->isEmpty() 
+        ? 'Nenhuma pessoa x endereço encontrada.' 
+        : 'Pessoas x Endereço listadas com sucesso.';
+    
+    return response()->json(
+        $this->pagination->format($pessoaEndereco, $message),
+        200
+    );
+}
     
     public function store(Request $request)
     {

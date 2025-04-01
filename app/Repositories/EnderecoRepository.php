@@ -14,9 +14,9 @@ class EnderecoRepository {
         return Endereco::find($id_endereco);
     }
 
-    public function getAllEndereco()
+    public function getAllEndereco($porPage, $page)
     {
-        return Endereco::all();
+        return Endereco::paginate($porPage, ['*'], 'page', $page);
     }
 
     public function updateEnderecoById($id_endereco, $dadosEndereco)

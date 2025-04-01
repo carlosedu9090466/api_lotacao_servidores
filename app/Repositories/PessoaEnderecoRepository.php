@@ -27,11 +27,12 @@ class PessoaEnderecoRepository {
         return Pessoa::with('pessoaEndereco.cidade')->find($id_pessoa);
     }
 
-    public function getAllPessoaEndereco(){
-        return Pessoa::with('pessoaEndereco.cidade')
-                ->orderBy('pes_id')
-                ->get();
+    public function getAllPessoaEndereco($perPage, $page){
+        $query = Pessoa::with('pessoaEndereco.cidade')
+        ->orderBy('pes_id');
+        return $query->paginate($perPage, ['*'], 'page', $page);
     }
+
 
 
     public function updatePessoaEndereco($id_pessoa,$dadosNovos){

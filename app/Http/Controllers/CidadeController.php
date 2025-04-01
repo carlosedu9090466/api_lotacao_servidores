@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cidade;
+use App\Models\Pagination;
 use App\Repositories\CidadeRepository;
 use Illuminate\Http\Request;
 
@@ -11,31 +12,37 @@ class CidadeController extends Controller
 
     private CidadeRepository $cidadeRepository;
     private Cidade $cidade;
+    private Pagination $pagination;
 
-    public function __construct(CidadeRepository $cidadeRepository, Cidade $cidade)
+    public function __construct(CidadeRepository $cidadeRepository, Cidade $cidade, Pagination $pagination)
     {
         $this->cidadeRepository = $cidadeRepository;
         $this->cidade = $cidade;
+        $this->pagination = $pagination;
     }
-   
-    public function index()
+
+    public function index(Request $request)
     {
-        $cidade = $this->cidadeRepository->getAllCidade();
+        $cidades = $this->cidadeRepository->getAllCidade(
+            $request->get('per_page', 10),
+            $request->get('page', 1)
+        );
 
-        $messagem = $cidade->isEmpty() ? 'Nenhuma cidade encontrada.' : 'Cidades listadas com sucesso.';
-
-        return response()->json([
-            'data' => $cidade,
-            'message' => $messagem
-        ], 200);
+        return response()->json(
+            $this->pagination->format(
+                $cidades,
+                $cidades->isEmpty() ? 'Nenhum endereço encontrado.' : 'Endereços listados com sucesso.'
+            ),
+            200
+        );
     }
 
 
-    
+
     public function store(Request $request)
     {
-        $validacaoDados = $this->cidade->validarDados($request->all()); 
-        if($validacaoDados){
+        $validacaoDados = $this->cidade->validarDados($request->all());
+        if ($validacaoDados) {
             return response()->json($validacaoDados, 422);
         }
         $cidade = $this->cidadeRepository->createCidade($request);
@@ -45,11 +52,11 @@ class CidadeController extends Controller
         ], 201);
     }
 
-   
+
     public function show($id)
     {
         $erroValidacaoID = $this->cidade->validarId($id);
-        if($erroValidacaoID){
+        if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
 
@@ -67,33 +74,32 @@ class CidadeController extends Controller
     }
 
 
-  
+
     public function update(Request $request, $id)
     {
-        
+
         $erroValidacaoID = $this->cidade->validarId($id);
-        if($erroValidacaoID){
+        if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
-     
-        $cidadeAtualizada = $this->cidadeRepository->updateCidadeById($id,$request->all());
+
+        $cidadeAtualizada = $this->cidadeRepository->updateCidadeById($id, $request->all());
         if (!$cidadeAtualizada) {
             return response()->json([
                 'message' => 'Cidade não encontrada.'
             ], 404);
         }
-        
+
         return response()->json([
             'data' => $cidadeAtualizada,
             'message' => 'Cidade atualizada com sucesso!'
         ]);
-
     }
 
     public function destroy($id)
     {
         $erroValidacaoID = $this->cidade->validarId($id);
-        if($erroValidacaoID){
+        if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
         $cidade = $this->cidadeRepository->deleteCidadeById($id);
@@ -106,6 +112,5 @@ class CidadeController extends Controller
         return response()->json([
             'message' => 'Cidade deletada com sucesso!'
         ]);
-
     }
 }

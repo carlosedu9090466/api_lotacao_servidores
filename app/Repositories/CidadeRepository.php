@@ -14,9 +14,10 @@ class CidadeRepository {
         return Cidade::find($id_cidade);
     }
 
-    public function getAllCidade()
+    public function getAllCidade($porPage = 10, $page = 1)
     {
-        return Cidade::all();
+        //return Cidade::all();
+        return Cidade::paginate($porPage, ['*'],'page', $page);
     }
 
     public function updateCidadeById($id_cidade, $dadosCidade)

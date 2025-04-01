@@ -20,9 +20,10 @@ class LotacaoRepository
             ->exists();
     }
 
-    public function getAllLotacao()
+    public function getAllLotacao($porPage, $page)
     {
-        return Lotacao::all();
+
+        return Lotacao::paginate($porPage, ['*'], 'page', $page);
     }
 
     public function getLotacaoById($id_lotacao)
@@ -31,26 +32,34 @@ class LotacaoRepository
     }
 
 
-    public function getEnderecoFuncionalPorNome($nome_servidor)
+    public function getEnderecoFuncionalPorNome($nome_servidor, $perPage = 15, $page = 1)
     {
-
-        $enderecoFuncionalUnidade = Pessoa::where('pes_nome', 'LIKE', "%{$nome_servidor}%")
+        $query = Pessoa::where('pes_nome', 'LIKE', "%{$nome_servidor}%")
             ->whereHas('servidorEfetivo')
-            ->whereHas('lotacao.unidadeLotacao.enderecos') 
-            ->with('lotacao.unidadeLotacao.enderecos') 
-            ->get()
-            ->map(function ($pessoa) {
-                return $pessoa->lotacao->unidadeLotacao->enderecos->map(function ($endereco) {
+            ->whereHas('lotacao.unidadeLotacao.enderecos')
+            ->with('lotacao.unidadeLotacao.enderecos');
+
+        $pessoas = $query->paginate($perPage, ['*'], 'page', $page);
+
+        $dadosTransformados = $pessoas->map(function ($pessoa) {
+            return [
+                'pessoa_id' => $pessoa->id,
+                'pessoa_nome' => $pessoa->pes_nome,
+                'enderecos' => $pessoa->lotacao->unidadeLotacao->enderecos->map(function ($endereco) {
                     return [
                         'end_tipo_logradouro' => $endereco->end_tipo_logradouro,
                         'end_logradouro' => $endereco->end_logradouro,
                         'end_numero' => $endereco->end_numero,
                         'end_bairro' => $endereco->end_bairro
                     ];
-                });
-            });
+                })
+            ];
+        });
 
-        return $enderecoFuncionalUnidade;
+        return [
+            'collection' => $pessoas,
+            'data' => $dadosTransformados
+        ];
     }
 
 

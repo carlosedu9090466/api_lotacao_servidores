@@ -6,6 +6,7 @@ use App\Models\Lotacao;
 use App\Models\ValidacaoId;
 use App\Repositories\LotacaoRepository;
 use Illuminate\Http\Request;
+use App\Models\Pagination;
 
 class LotacaoController extends Controller
 {
@@ -13,29 +14,55 @@ class LotacaoController extends Controller
     private LotacaoRepository $lotacaoRepository;
     private Lotacao $lotacao;
     private ValidacaoId $validacaoId;
+    private Pagination $pagination;
 
-    public function __construct(LotacaoRepository $lotacaoRepository, Lotacao $lotacao, ValidacaoId $validacaoId)
+    public function __construct(LotacaoRepository $lotacaoRepository, Lotacao $lotacao, ValidacaoId $validacaoId,  Pagination $pagination)
     {
         $this->lotacaoRepository = $lotacaoRepository;
         $this->lotacao = $lotacao;
         $this->validacaoId = $validacaoId;
+        $this->pagination = $pagination;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $lotacoes = $this->lotacaoRepository->getAllLotacao();
+        $lotacoes = $this->lotacaoRepository->getAllLotacao(
+            $request->get('per_page', 10),
+            $request->get('page', 1)
+        );
 
-        $messagem = $lotacoes->isEmpty() ? 'Nenhuma lotação encontrada' : 'Lotações listadas com sucesso.';
-
-        return response()->json([
-            'data' => $lotacoes,
-            'message' => $messagem
-        ], 200);
+        return response()->json(
+            $this->pagination->format(
+                $lotacoes,
+                $lotacoes->isEmpty() ? 'Nenhum endereço encontrado.' : 'Endereços listados com sucesso.'
+            ),
+            200
+        );
     }
 
     public function getEnderecoFuncionalServidorEfetivoPorNome(Request $request){
 
-      
+            
+        $resultado = $this->lotacaoRepository->getEnderecoFuncionalPorNome(
+            $request->pes_nome,
+            $request->get('per_page', 15),
+            $request->get('page', 1)
+        );
+    
+        if ($resultado['collection']->isEmpty()) {
+            return response()->json([
+                'message' => 'Não foi encontrado nenhuma informação no sistema.'
+            ], 422);
+        }
+    
+        return response()->json(
+            $this->pagination->format(
+                $resultado['collection'],
+                'Endereço encontrado com sucesso!'
+            ),
+            200
+        );
+
         $enderecoFuncional = $this->lotacaoRepository->getEnderecoFuncionalPorNome($request->pes_nome);
 
         if(!$enderecoFuncional){

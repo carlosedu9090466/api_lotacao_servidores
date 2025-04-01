@@ -29,45 +29,40 @@ class ServidorEfetivoRepository
         return ServidorEfetivo::where('pes_id', $id_pessoa)->first();
     }
 
-    public function getAllServidorEfetivo()
+    public function getAllServidorEfetivo($perPage = 15, $page = 1)
     {
-        $todosServidoresEfetivos = Pessoa::whereHas('servidorEfetivo')
-        ->with(['lotacao.unidadeLotacao', 'servidorEfetivo'])
-        ->get()
-        ->map(function ($pessoa) {
-            return [
-                'nome' => $pessoa->pes_nome,
-                'idade' => Pessoa::calcularIdade($pessoa->pes_data_nascimento),
-                'unidade' => $pessoa->lotacao->unidadeLotacao->unid_nome ?? 'Sem unidade definida',
-                //'matricula' => $pessoa->servidorEfetivo->se_matricula,
-                'fotografia' => $pessoa->fotografia ?? null
-            ];
-        });
-
-        return $todosServidoresEfetivos;
+        return Pessoa::whereHas('servidorEfetivo')
+            ->with(['lotacao.unidadeLotacao', 'servidorEfetivo'])
+            ->orderBy('pes_nome') // Adicionando ordenação por nome
+            ->paginate($perPage, ['*'], 'page', $page)
+            ->through(function ($pessoa) {
+                return [
+                    'nome' => $pessoa->pes_nome,
+                    'idade' => Pessoa::calcularIdade($pessoa->pes_data_nascimento),
+                    'unidade' => $pessoa->lotacao->unidadeLotacao->unid_nome ?? 'Sem unidade definida',
+                    'fotografia' => $pessoa->fotografia ?? null
+                ];
+            });
     }
 
-    public function getServidoresEfetivosPorUnidade($unid_id)
-    {
-        $servidoresEfetivos = Pessoa::whereHas('lotacao', function ($query) use ($unid_id) {
+    public function getServidoresEfetivosPorUnidade($unid_id, $perPage = 15, $page = 1)
+{
+    return Pessoa::whereHas('lotacao', function ($query) use ($unid_id) {
             $query->where('unid_id', $unid_id);
         })
         ->whereHas('servidorEfetivo')
         ->with(['lotacao.unidadeLotacao', 'servidorEfetivo'])
-        ->get()
-        ->map(function ($pessoa) {
+        ->orderBy('pes_nome') // Adicionando ordenação por nome
+        ->paginate($perPage, ['*'], 'page', $page)
+        ->through(function ($pessoa) {
             return [
                 'nome' => $pessoa->pes_nome,
                 'idade' => Pessoa::calcularIdade($pessoa->pes_data_nascimento),
                 'unidade' => $pessoa->lotacao->unidadeLotacao->unid_nome ?? null,
-                //'matricula' => $pessoa->servidorEfetivo->se_matricula,
                 'fotografia' => $pessoa->fotografia ?? null
             ];
         });
-
-        return $servidoresEfetivos;
-
-    }
+}
 
 
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pagination;
 use App\Models\Unidade;
 use App\Repositories\UnidadeRepository;
 use Illuminate\Http\Request;
@@ -11,30 +12,37 @@ class UnidadeController extends Controller
 
     private UnidadeRepository $unidadeRepository;
     private Unidade $unidade;
+    private Pagination $pagination;
 
-    public function __construct(UnidadeRepository $unidadeRepository, Unidade $unidade)
+    public function __construct(UnidadeRepository $unidadeRepository, Unidade $unidade, Pagination $pagination)
     {
         $this->unidadeRepository = $unidadeRepository;
         $this->unidade = $unidade;
+        $this->pagination = $pagination;
     }
-    
-    public function index()
+
+    public function index(Request $request)
     {
-        $unidade = $this->unidadeRepository->getAllUnidade();
+        $perPage = $request->get('per_page', 15);
+        $page = $request->get('page', 1);
 
-        $messagem = $unidade->isEmpty() ? 'Nenhuma unidade encontrada' : 'Unidades listadas com sucesso.';
+        $unidades = $this->unidadeRepository->getAllUnidade($perPage, $page);
 
-        return response()->json([
-            'data' => $unidade,
-            'message' => $messagem
-        ], 200);
+        $message = $unidades->isEmpty()
+            ? 'Nenhuma unidade encontrada.'
+            : 'Unidades listadas com sucesso.';
+
+        return response()->json(
+            $this->pagination->format($unidades, $message),
+            200
+        );
     }
 
-   
+
     public function store(Request $request)
     {
-        $validacaoDados = $this->unidade->validarDados($request->all()); 
-        if($validacaoDados){
+        $validacaoDados = $this->unidade->validarDados($request->all());
+        if ($validacaoDados) {
             return response()->json($validacaoDados, 422);
         }
         $unidade = $this->unidadeRepository->createUnidade($request);
@@ -44,11 +52,11 @@ class UnidadeController extends Controller
         ], 201);
     }
 
- 
+
     public function show($id)
     {
         $erroValidacaoID = $this->unidade->validarId($id);
-        if($erroValidacaoID){
+        if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
 
@@ -65,34 +73,33 @@ class UnidadeController extends Controller
         ]);
     }
 
-    
-   
+
+
     public function update(Request $request, $id)
     {
-        
+
         $erroValidacaoID = $this->unidade->validarId($id);
-        if($erroValidacaoID){
+        if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
-  
-        $unidadeAtualizada = $this->unidadeRepository->updateUnidadeById($id,$request->all());
+
+        $unidadeAtualizada = $this->unidadeRepository->updateUnidadeById($id, $request->all());
         if (!$unidadeAtualizada) {
             return response()->json([
                 'message' => 'Unidade não encontrada.'
             ], 404);
         }
-        
+
         return response()->json([
             'data' => $unidadeAtualizada,
             'message' => 'Unidade atualizada com sucesso!'
         ]);
-
     }
 
     public function destroy($id)
     {
         $erroValidacaoID = $this->unidade->validarId($id);
-        if($erroValidacaoID){
+        if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
 
@@ -106,6 +113,5 @@ class UnidadeController extends Controller
         return response()->json([
             'message' => 'Unidade deletada com sucesso!'
         ]);
-
     }
 }

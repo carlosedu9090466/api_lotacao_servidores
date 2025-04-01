@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pagination;
 use App\Models\Pessoa;
 use App\Repositories\PessoaRepository;
 use Illuminate\Http\Request;
@@ -12,30 +13,35 @@ class PessoaController extends Controller
 
     private PessoaRepository $pessoaRepository;
     private Pessoa $pessoa;
+    private Pagination $pagination;
 
-    public function __construct(PessoaRepository $pessoaRepository, Pessoa $pessoa)
+    public function __construct(PessoaRepository $pessoaRepository, Pessoa $pessoa,  Pagination $pagination)
     {
         $this->pessoaRepository = $pessoaRepository;
         $this->pessoa = $pessoa;
+        $this->pagination = $pagination;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $pessoas = $this->pessoaRepository->getAllPessoa();
+        $perPage = $request->get('per_page', 15);
+        $page = $request->get('page', 1);
 
-        $messagem = $pessoas->isEmpty() ? 'Nenhuma pessoa encontrada' : 'Pessoas listadas com sucesso.';
+        $pessoas = $this->pessoaRepository->getAllPessoa($perPage, $page);
 
-        return response()->json([
-            'data' => $pessoas,
-            'message' => $messagem
-        ], 200);
+        $message = $pessoas->isEmpty() ? 'Nenhuma pessoa encontrada.' : 'Pessoas listadas com sucesso.';
+
+        return response()->json(
+            $this->pagination->format($pessoas, $message),
+            200
+        );
     }
 
     // Criar algum servidor 
     public function store(Request $request)
     {
-        $validacaoDados = $this->pessoa->validarDados($request->all()); 
-        if($validacaoDados){
+        $validacaoDados = $this->pessoa->validarDados($request->all());
+        if ($validacaoDados) {
             return response()->json($validacaoDados, 422);
         }
 
@@ -50,7 +56,7 @@ class PessoaController extends Controller
     public function show($id)
     {
         $erroValidacaoID = $this->pessoa->validarId($id);
-        if($erroValidacaoID){
+        if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
 
@@ -70,31 +76,30 @@ class PessoaController extends Controller
 
     public function update(Request $request, $id)
     {
-        
+
         $erroValidacaoID = $this->pessoa->validarId($id);
-        if($erroValidacaoID){
+        if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
-        
-        $pessoaAtualizada = $this->pessoaRepository->updatePessoaById($id,$request->all());
+
+        $pessoaAtualizada = $this->pessoaRepository->updatePessoaById($id, $request->all());
         if (!$pessoaAtualizada) {
             return response()->json([
                 'message' => 'Pessoa não encontrada.'
             ], 404);
         }
-        
+
         return response()->json([
             'data' => $pessoaAtualizada,
             'message' => 'Pessoa atualizada com sucesso!'
         ]);
-
     }
 
 
     public function destroy($id)
     {
         $erroValidacaoID = $this->pessoa->validarId($id);
-        if($erroValidacaoID){
+        if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
 
@@ -108,6 +113,5 @@ class PessoaController extends Controller
         return response()->json([
             'message' => 'Pessoa deletada com sucesso!'
         ]);
-
     }
 }

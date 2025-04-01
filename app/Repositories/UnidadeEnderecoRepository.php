@@ -14,19 +14,22 @@ class UnidadeEnderecoRepository
         return UnidadeEndereco::create($dados->all());
     }
 
-    public function existsUnidadeEndereco($id_unidade){
-        return UnidadeEndereco::where('unid_id',$id_unidade)->exists();
+    public function existsUnidadeEndereco($id_unidade)
+    {
+        return UnidadeEndereco::where('unid_id', $id_unidade)->exists();
     }
 
 
-    public function getRelacionamentoUnidadeEndereco($id_unidade){
-        return UnidadeEndereco::where('unid_id',$id_unidade)->first();
+    public function getRelacionamentoUnidadeEndereco($id_unidade)
+    {
+        return UnidadeEndereco::where('unid_id', $id_unidade)->first();
     }
 
-    public function updateUnidadeEndereco($id_unidade,$dadosNovos){
+    public function updateUnidadeEndereco($id_unidade, $dadosNovos)
+    {
         $unidadeEndereco = self::getRelacionamentoUnidadeEndereco($id_unidade);
 
-        if(!$unidadeEndereco){
+        if (!$unidadeEndereco) {
             return null;
         }
 
@@ -34,16 +37,30 @@ class UnidadeEnderecoRepository
         $unidadeEndereco->save();
 
         return $unidadeEndereco;
-
     }
 
 
-    public function getAllUnidadeEnderecoCidade(){
-        return Unidade::with('enderecos.cidade')->get(); 
-    }
-
-    public function getEnderecoByIdUnidade($id_unidade)
+    public function getAllUnidadeEnderecoCidade($perPage = 15, $page = 1)
     {
-        return Unidade::with('enderecos.cidade')->find($id_unidade);
+        return Unidade::with('enderecos.cidade')
+            ->orderBy('unid_nome')
+            ->paginate($perPage, ['*'], 'page', $page);
+    }
+
+    public function getEnderecoByIdUnidade($id_unidade, $perPage = 15, $page = 1)
+    {
+        $unidade = Unidade::with(['enderecos' => function ($query) use ($perPage, $page) {
+            $query->paginate($perPage, ['*'], 'page', $page);
+        }, 'enderecos.cidade'])
+            ->find($id_unidade);
+
+        return [
+            'unidade' => $unidade,
+            'pagination' => [
+                'current_page' => $page,
+                'per_page' => $perPage,
+                'total' => $unidade ? $unidade->enderecos()->count() : 0
+            ]
+        ];
     }
 }

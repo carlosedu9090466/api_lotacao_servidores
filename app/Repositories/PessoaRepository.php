@@ -9,8 +9,8 @@ class PessoaRepository {
         return Pessoa::find($id_pessoa);
     }
 
-    public function getAllPessoa(){
-        return Pessoa::all();
+    public function getAllPessoa($porPage, $page){
+        return Pessoa::paginate($porPage, ['*'], 'page', $page);
     }
 
     public function createPessoa($dados){

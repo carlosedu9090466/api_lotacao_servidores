@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pagination;
 use App\Models\ServidorEfetivo;
 use App\Models\ValidacaoId;
 use App\Repositories\ServidorEfetivoRepository;
@@ -13,47 +14,60 @@ class ServidorEfetivoController extends Controller
     private ServidorEfetivoRepository $servidorEfetivoRepository;
     private ServidorEfetivo $servidorEfetivo;
     private ValidacaoId $validacaoId;
+    private Pagination $pagination;
 
-    public function __construct(ServidorEfetivoRepository $servidorEfetivoRepository, ServidorEfetivo $servidorEfetivo, ValidacaoId $validacaoId)
+    public function __construct(ServidorEfetivoRepository $servidorEfetivoRepository, ServidorEfetivo $servidorEfetivo, ValidacaoId $validacaoId, Pagination $pagination)
     {
         $this->servidorEfetivoRepository = $servidorEfetivoRepository;
         $this->servidorEfetivo = $servidorEfetivo;
         $this->validacaoId = $validacaoId;
+        $this->pagination = $pagination;
     }
 
-    public function getAllServidoresEfetivos(){
-      
-        $servidoresEfetivos = $this->servidorEfetivoRepository->getAllServidorEfetivo();
+    public function getAllServidoresEfetivos(Request $request)
+    {
+        $perPage = $request->get('per_page', 15);
+        $page = $request->get('page', 1);
 
-        $messagem = $servidoresEfetivos->isEmpty() ? 'Nenhuma servidor efetivo encontrado.' : 'Servidores efetivos listadas com sucesso.';
+        $servidoresEfetivos = $this->servidorEfetivoRepository->getAllServidorEfetivo($perPage, $page);
 
-        return response()->json([
-            'data' => $servidoresEfetivos,
-            'message' => $messagem
-        ], 200);
+        $message = $servidoresEfetivos->isEmpty()
+            ? 'Nenhum servidor efetivo encontrado.'
+            : 'Servidores efetivos listados com sucesso.';
 
+        return response()->json(
+            $this->pagination->format($servidoresEfetivos, $message),
+            200
+        );
     }
 
-    public function getServidoresEfetivosPorUnidade($id_unidade){
-
+    public function getServidoresEfetivosPorUnidade($id_unidade, Request $request)
+    {
+        // Validação do ID
         $erroValidacaoID = $this->validacaoId->validarId($id_unidade);
-        if($erroValidacaoID){
+        if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
-        $servidoresEfetivosPorUnidade = $this->servidorEfetivoRepository->getServidoresEfetivosPorUnidade($id_unidade);
-        
-        $messagem = $servidoresEfetivosPorUnidade->isEmpty() ? 'Nenhuma servidor efetivo encontrado.' : 'Servidores efetivos listadas com sucesso.';
 
-        return response()->json([
-            'data' => $servidoresEfetivosPorUnidade,
-            'message' => $messagem
-        ], 200);
+        $perPage = $request->get('per_page', 15);
+        $page = $request->get('page', 1);
 
+        $servidoresEfetivosPorUnidade = $this->servidorEfetivoRepository
+            ->getServidoresEfetivosPorUnidade($id_unidade, $perPage, $page);
+
+        $message = $servidoresEfetivosPorUnidade->isEmpty()
+            ? 'Nenhum servidor efetivo encontrado.'
+            : 'Servidores efetivos listados com sucesso.';
+
+        return response()->json(
+            $this->pagination->format($servidoresEfetivosPorUnidade, $message),
+            200
+        );
     }
 
 
 
-    
+
     public function store(Request $request)
     {
         $validacaoDados = $this->servidorEfetivo->validarDados($request->all());
@@ -67,7 +81,7 @@ class ServidorEfetivoController extends Controller
             ], 422);
         }
 
-        if($this->servidorEfetivoRepository->existsMatricula($request->se_matricula)){
+        if ($this->servidorEfetivoRepository->existsMatricula($request->se_matricula)) {
             return response()->json([
                 'message' => 'Sitema não aceita matrícula duplicada!'
             ], 422);
@@ -83,32 +97,33 @@ class ServidorEfetivoController extends Controller
 
 
     //atualizar a matricula efetiva
-    public function update(Request $request, $id_pessoa){
-      
+    public function update(Request $request, $id_pessoa)
+    {
+
         $erroValidacaoID = $this->validacaoId->validarId($id_pessoa);
-        if($erroValidacaoID){
+        if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
-        
-        $servidorEfetivoAtualizado = $this->servidorEfetivoRepository->updateServidorEfetivo($id_pessoa,$request->all());
+
+        $servidorEfetivoAtualizado = $this->servidorEfetivoRepository->updateServidorEfetivo($id_pessoa, $request->all());
 
         if (!$servidorEfetivoAtualizado) {
             return response()->json([
                 'message' => 'O servidor não foi encontrado no sistema.'
             ], 404);
         }
-        
+
         return response()->json([
             'data' => $servidorEfetivoAtualizado,
             'message' => 'A matricula atualizada com sucesso!'
         ]);
-
     }
 
-    public function destroy($id_pessoa){
+    public function destroy($id_pessoa)
+    {
 
         $erroValidacaoID = $this->servidorEfetivo->validarId($id_pessoa);
-        if($erroValidacaoID){
+        if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
 
@@ -122,8 +137,5 @@ class ServidorEfetivoController extends Controller
         return response()->json([
             'message' => 'Servidor efetivo deletado com sucesso!'
         ]);
-
     }
-
-
 }

@@ -22,3 +22,7 @@ docker exec -it api_lotacao_servidores-master-app-1 php artisan db:seed --class=
 
 ## 4 - crie um bucket chamado laravel 
 ## com isso pode salvar as imagens das pessoas no bucket pela rota da api.
+
+# irá crirar um admin. quando rodar o seed 
+# email - carlosadm@gmail.com
+# password - @123@123'

@@ -17,9 +17,10 @@ class UnidadeRepository
         return Unidade::find($id_unidade);
     }
 
-    public function getAllUnidade()
+    public function getAllUnidade($perPage = 15, $page = 1)
     {
-        return Unidade::all();
+        return Unidade::orderBy('unid_nome')
+            ->paginate($perPage, ['*'], 'page', $page);
     }
 
     public function updateUnidadeById($id_unidade, $dadosUnidade)

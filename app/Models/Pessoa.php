@@ -122,4 +122,9 @@ class Pessoa extends Model
     {
         return \Carbon\Carbon::parse($data_nascimento)->age;
     }
+
+    public function fotoPessoa()
+    {
+        return $this->hasOne(FotoPessoa::class, 'pes_id');
+    }
 }

@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Pessoa;
 use App\Models\ServidorEfetivo;
+use App\Models\Traits;
 
 class ServidorEfetivoRepository
 {
@@ -46,23 +47,36 @@ class ServidorEfetivoRepository
     }
 
     public function getServidoresEfetivosPorUnidade($unid_id, $perPage = 15, $page = 1)
-{
-    return Pessoa::whereHas('lotacao', function ($query) use ($unid_id) {
+    {
+        return Pessoa::whereHas('lotacao', function ($query) use ($unid_id) {
             $query->where('unid_id', $unid_id);
         })
-        ->whereHas('servidorEfetivo')
-        ->with(['lotacao.unidadeLotacao', 'servidorEfetivo'])
-        ->orderBy('pes_nome') // Adicionando ordenação por nome
-        ->paginate($perPage, ['*'], 'page', $page)
-        ->through(function ($pessoa) {
-            return [
-                'nome' => $pessoa->pes_nome,
-                'idade' => Pessoa::calcularIdade($pessoa->pes_data_nascimento),
-                'unidade' => $pessoa->lotacao->unidadeLotacao->unid_nome ?? null,
-                'fotografia' => $pessoa->fotografia ?? null
-            ];
-        });
-}
+            ->whereHas('servidorEfetivo')
+            ->with([
+                'lotacao.unidadeLotacao',
+                'servidorEfetivo',
+                'fotoPessoa' // Carrega o relacionamento com a foto
+            ])
+            ->orderBy('pes_nome')
+            ->paginate($perPage, ['*'], 'page', $page)
+            ->through(function ($pessoa) {
+                // Gera a URL assinada se existir foto
+                $fotoUrl = null;
+                if ($pessoa->fotoPessoa) {
+                    $extensao = pathinfo($pessoa->fotoPessoa->fp_caminho, PATHINFO_EXTENSION);
+                    $caminho = "pessoas/{$pessoa->pes_id}/{$pessoa->fotoPessoa->fp_hash}.{$extensao}";
+                    $fotoUrl = Traits::generatePresignedUrl($caminho);
+                }
+
+                return [
+                    'nome' => $pessoa->pes_nome,
+                    'idade' => Pessoa::calcularIdade($pessoa->pes_data_nascimento),
+                    'unidade' => $pessoa->lotacao->unidadeLotacao->unid_nome ?? null,
+                    'matricula' => $pessoa->servidorEfetivo->se_matricula ?? null, // Adicionado matrícula
+                    'fotografia' => $fotoUrl // URL assinada
+                ];
+            });
+    }
 
 
 

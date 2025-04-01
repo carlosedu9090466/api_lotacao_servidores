@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Pessoa;
 use App\Models\ServidorTemporario;
+use App\Models\Traits;
 
 class ServidorTemporarioRepository
 {
@@ -45,15 +46,27 @@ class ServidorTemporarioRepository
             $query->where('unid_id', $unid_id);
         })
             ->whereHas('servidorTemporario')
-            ->with(['lotacao.unidadeLotacao', 'servidorTemporario'])
-            ->orderBy('pes_nome') // Ordenação por nome
+            ->with([
+                'lotacao.unidadeLotacao',
+                'servidorTemporario',
+                'fotoPessoa' // Carrega o relacionamento com a foto
+            ])
+            ->orderBy('pes_nome')
             ->paginate($perPage, ['*'], 'page', $page)
             ->through(function ($pessoa) {
+
+                $fotoUrl = null;
+                if ($pessoa->fotoPessoa) {
+                    $extensao = pathinfo($pessoa->fotoPessoa->fp_caminho, PATHINFO_EXTENSION);
+                    $caminho = "pessoas/{$pessoa->pes_id}/{$pessoa->fotoPessoa->fp_hash}.{$extensao}";
+                    $fotoUrl = Traits::generatePresignedUrl($caminho);
+                }
+
                 return [
                     'nome' => $pessoa->pes_nome,
                     'idade' => Pessoa::calcularIdade($pessoa->pes_data_nascimento),
                     'unidade' => $pessoa->lotacao->unidadeLotacao->unid_nome ?? null,
-                    'fotografia' => $pessoa->fotografia ?? null
+                    'fotografia' => $fotoUrl
                 ];
             });
     }

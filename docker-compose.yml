@@ -1,9 +1,7 @@
-version: '3.8'
-
 services:
   # Container da API Laravel
   app:
-    container_name: api_laravel_lotacao  
+    container_name: api_laravel_lotacao
     build: .
     ports:
       - "8000:80"
@@ -50,8 +48,21 @@ services:
     ports:
       - "9000:9000"
       - "9001:9001"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
 
-# Volumes para persistência de dados
+  # Serviço para criar bucket automaticamente
+  createbucket:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c " /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin && /usr/bin/mc mb myminio/laravel --ignore-existing && /usr/bin/mc policy set public myminio/laravel"
+
 volumes:
   postgres_data:
   minio_data:

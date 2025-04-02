@@ -1,28 +1,46 @@
-## rodar o docker 
+# API Lotação Servidores
 
-## DOCKER - subir os containers - API - BANCO - SISTEMA DE ARMAZENAMENTO
+## Configuração Inicial
 
-## rode o docker-compose - para subir os containers
+### 1. Subindo os Containers Docker
 
+Execute o comando abaixo para construir e iniciar os containers (API, Banco de Dados e Sistema de Armazenamento):
+
+```bash
 docker-compose up -d --build
+```
 
-## depois em seguida rode os comandos na sequência
+### 2. Configurando a Aplicação
 
+Execute os seguintes comandos em sequência:
+
+#### Instalando Dependências
+```bash
 docker exec -it api_laravel_lotacao composer install
+```
 
+#### Executando Migrações
+```bash
 docker exec -it api_laravel_lotacao php artisan migrate
+```
 
-docker exec -it api_laravel_lotacao php artisan db:seed --class=AdminUserSeeder 
+#### Populando o Banco com Usuário Admin
+```bash
+docker exec -it api_laravel_lotacao php artisan db:seed --class=AdminUserSeeder
+```
 
-## 3 - entre no localhost:90001 e digite as credenciais para acessar o MinIO bucket 
+### 3. Configurando MinIO
 
-## Username = minioadmin
+1. Acesse o MinIO em `localhost:9001`
+2. Use as seguintes credenciais:
+   - Username: `minioadmin`
+   - Password: `minioadmin`
+3. Crie um bucket chamado `laravel`
 
-## Password = minioadmin
+> Após a configuração, você poderá utilizar o bucket para armazenamento de imagens através da API.
 
-## 4 - crie um bucket chamado laravel 
-## com isso pode salvar as imagens das pessoas no bucket pela rota da api.
+### Credenciais do Administrador
 
-# irá crirar um admin. quando rodar o seed 
-# email - carlosadm@gmail.com
-# password - @123@123'
+Após executar o seeder, você terá acesso com as seguintes credenciais:
+- Email: `carlosadm@gmail.com`
+- Senha: `@123@123`

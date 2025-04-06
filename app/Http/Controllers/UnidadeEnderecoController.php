@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Pagination;
 use App\Models\UnidadeEndereco;
+use App\Models\ValidacaoId;
 use App\Repositories\UnidadeEnderecoRepository;
 use Illuminate\Http\Request;
 
@@ -13,12 +14,14 @@ class UnidadeEnderecoController extends Controller
     private UnidadeEnderecoRepository $unidadeEnderecoRepository;
     private UnidadeEndereco $unidadeEndereco;
     private Pagination $pagination;
+    private ValidacaoId $validacaoId;
 
-    public function __construct(UnidadeEnderecoRepository $unidadeEnderecoRepository, UnidadeEndereco $unidadeEndereco, Pagination $pagination)
+    public function __construct(UnidadeEnderecoRepository $unidadeEnderecoRepository, UnidadeEndereco $unidadeEndereco, Pagination $pagination, ValidacaoId $validacaoId)
     {
         $this->unidadeEnderecoRepository = $unidadeEnderecoRepository;
         $this->unidadeEndereco = $unidadeEndereco;
         $this->pagination = $pagination;
+        $this->validacaoId = $validacaoId;
     }
 
     public function index(Request $request)
@@ -62,7 +65,7 @@ class UnidadeEnderecoController extends Controller
     public function update(Request $request, $id_unidade)
     {
 
-        $erroValidacaoID = $this->unidadeEndereco->validarId($id_unidade);
+        $erroValidacaoID = $this->validacaoId->validarId($id_unidade);
         if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
@@ -83,7 +86,7 @@ class UnidadeEnderecoController extends Controller
     public function getEnderecoByUnidade($id_unidade, Request $request)
     {
         // Validação do ID
-        $erroValidacaoID = $this->unidadeEndereco->validarId($id_unidade);
+        $erroValidacaoID = $this->validacaoId->validarId($id_unidade);
         if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Pagination;
 use App\Models\Pessoa;
+use App\Models\ValidacaoId;
 use App\Repositories\PessoaRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -14,12 +15,14 @@ class PessoaController extends Controller
     private PessoaRepository $pessoaRepository;
     private Pessoa $pessoa;
     private Pagination $pagination;
+    private ValidacaoId $validacaoId;
 
-    public function __construct(PessoaRepository $pessoaRepository, Pessoa $pessoa,  Pagination $pagination)
+    public function __construct(PessoaRepository $pessoaRepository, Pessoa $pessoa,  Pagination $pagination,ValidacaoId $validacaoId)
     {
         $this->pessoaRepository = $pessoaRepository;
         $this->pessoa = $pessoa;
         $this->pagination = $pagination;
+        $this->validacaoId = $validacaoId;
     }
 
     public function index(Request $request)
@@ -55,7 +58,7 @@ class PessoaController extends Controller
     //exibir algum servidor específico
     public function show($id)
     {
-        $erroValidacaoID = $this->pessoa->validarId($id);
+        $erroValidacaoID = $this->validacaoId->validarId($id);
         if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
@@ -77,7 +80,7 @@ class PessoaController extends Controller
     public function update(Request $request, $id)
     {
 
-        $erroValidacaoID = $this->pessoa->validarId($id);
+        $erroValidacaoID = $this->validacaoId->validarId($id);
         if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
@@ -98,7 +101,7 @@ class PessoaController extends Controller
 
     public function destroy($id)
     {
-        $erroValidacaoID = $this->pessoa->validarId($id);
+        $erroValidacaoID = $this->validacaoId->validarId($id);
         if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }

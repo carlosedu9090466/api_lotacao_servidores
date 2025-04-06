@@ -15,7 +15,7 @@ class EnderecoController extends Controller
     private Pagination $pagination;
     private ValidacaoId $validacaoId;
 
-    public function __construct(EnderecoRepository $enderecoRepository, Endereco $endereco, Pagination $pagination, ValidacaoId $validacaoId)
+    public function __construct(EnderecoRepository $enderecoRepository,Endereco $endereco ,Pagination $pagination, ValidacaoId $validacaoId)
     {
         $this->enderecoRepository = $enderecoRepository;
         $this->endereco = $endereco;
@@ -100,7 +100,7 @@ class EnderecoController extends Controller
 
     public function destroy($id)
     {
-        $erroValidacaoID = $this->endereco->validarId($id);
+        $erroValidacaoID = $this->validacaoId->validarId($id);
         if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }

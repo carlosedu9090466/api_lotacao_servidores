@@ -89,14 +89,9 @@ class ServidorTemporarioController extends Controller
     public function update(Request $request, $id_pessoa)
     {
 
-        $erroValidacaoID = $this->servidorTemporario->validarId($id_pessoa);
+        $erroValidacaoID = $this->validacaoId->validarId($id_pessoa);
         if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
-        }
-
-        $validacaoDados = $this->servidorTemporario->validarDados($request->all());
-        if ($validacaoDados) {
-            return response()->json($validacaoDados, 422);
         }
 
         $servidorTemporarioAtualizado = $this->servidorTemporarioRepository->updateServidorTemporario($id_pessoa, $request->all());
@@ -117,7 +112,7 @@ class ServidorTemporarioController extends Controller
     public function destroy($id_pessoa)
     {
 
-        $erroValidacaoID = $this->servidorTemporario->validarId($id_pessoa);
+        $erroValidacaoID = $this->validacaoId->validarId($id_pessoa);
         if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }

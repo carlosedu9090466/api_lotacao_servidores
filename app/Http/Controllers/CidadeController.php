@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cidade;
 use App\Models\Pagination;
+use App\Models\ValidacaoId;
 use App\Repositories\CidadeRepository;
 use Illuminate\Http\Request;
 
@@ -13,12 +14,14 @@ class CidadeController extends Controller
     private CidadeRepository $cidadeRepository;
     private Cidade $cidade;
     private Pagination $pagination;
+    private ValidacaoId $validacaoId;
 
-    public function __construct(CidadeRepository $cidadeRepository, Cidade $cidade, Pagination $pagination)
+    public function __construct(CidadeRepository $cidadeRepository, Pagination $pagination, ValidacaoId $validacaoId, Cidade $cidade)
     {
         $this->cidadeRepository = $cidadeRepository;
-        $this->cidade = $cidade;
         $this->pagination = $pagination;
+        $this->cidade = $cidade;
+        $this->validacaoId = $validacaoId;
     }
 
     public function index(Request $request)
@@ -55,7 +58,7 @@ class CidadeController extends Controller
 
     public function show($id)
     {
-        $erroValidacaoID = $this->cidade->validarId($id);
+        $erroValidacaoID = $this->validacaoId->validarId($id);
         if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
@@ -78,7 +81,7 @@ class CidadeController extends Controller
     public function update(Request $request, $id)
     {
 
-        $erroValidacaoID = $this->cidade->validarId($id);
+        $erroValidacaoID = $this->validacaoId->validarId($id);
         if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
@@ -98,7 +101,7 @@ class CidadeController extends Controller
 
     public function destroy($id)
     {
-        $erroValidacaoID = $this->cidade->validarId($id);
+        $erroValidacaoID = $this->validacaoId->validarId($id);
         if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }

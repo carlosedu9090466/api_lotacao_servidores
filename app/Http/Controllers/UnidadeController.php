@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Pagination;
 use App\Models\Unidade;
+use App\Models\ValidacaoId;
 use App\Repositories\UnidadeRepository;
 use Illuminate\Http\Request;
 
@@ -12,13 +13,15 @@ class UnidadeController extends Controller
 
     private UnidadeRepository $unidadeRepository;
     private Unidade $unidade;
+    private ValidacaoId $validacaoId;
     private Pagination $pagination;
 
-    public function __construct(UnidadeRepository $unidadeRepository, Unidade $unidade, Pagination $pagination)
+    public function __construct(UnidadeRepository $unidadeRepository, Unidade $unidade, Pagination $pagination, ValidacaoId $validacaoId)
     {
         $this->unidadeRepository = $unidadeRepository;
         $this->unidade = $unidade;
         $this->pagination = $pagination;
+        $this->validacaoId = $validacaoId;
     }
 
     public function index(Request $request)
@@ -55,7 +58,7 @@ class UnidadeController extends Controller
 
     public function show($id)
     {
-        $erroValidacaoID = $this->unidade->validarId($id);
+        $erroValidacaoID = $this->validacaoId->validarId($id);
         if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
@@ -78,7 +81,7 @@ class UnidadeController extends Controller
     public function update(Request $request, $id)
     {
 
-        $erroValidacaoID = $this->unidade->validarId($id);
+        $erroValidacaoID = $this->validacaoId->validarId($id);
         if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
@@ -98,7 +101,7 @@ class UnidadeController extends Controller
 
     public function destroy($id)
     {
-        $erroValidacaoID = $this->unidade->validarId($id);
+        $erroValidacaoID = $this->validacaoId->validarId($id);
         if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }

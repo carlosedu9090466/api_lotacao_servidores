@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Pagination;
 use App\Models\PessoaEndereco;
+use App\Models\ValidacaoId;
 use App\Repositories\PessoaEnderecoRepository;
 use Illuminate\Http\Request;
 
@@ -13,12 +14,14 @@ class PessoaEnderecoController extends Controller
     private PessoaEnderecoRepository $pessoaEnderecoRepository;
     private PessoaEndereco $pessoaEndereco;
     private Pagination $pagination;
+    private ValidacaoId $validacaoId;
 
-    public function __construct(PessoaEnderecoRepository $pessoaEnderecoRepository, PessoaEndereco $pessoaEndereco,  Pagination $pagination)
+    public function __construct(PessoaEnderecoRepository $pessoaEnderecoRepository, PessoaEndereco $pessoaEndereco,ValidacaoId $validacaoId,  Pagination $pagination)
     {
         $this->pessoaEnderecoRepository = $pessoaEnderecoRepository;
         $this->pessoaEndereco = $pessoaEndereco;
         $this->pagination = $pagination;
+        $this->validacaoId = $validacaoId;
     }
 
     public function index(Request $request)
@@ -61,7 +64,7 @@ class PessoaEnderecoController extends Controller
 
     public function update(Request $request, $id_pessoa){
       
-        $erroValidacaoID = $this->pessoaEndereco->validarId($id_pessoa);
+        $erroValidacaoID = $this->validacaoId->validarId($id_pessoa);
         if($erroValidacaoID){
             return response()->json($erroValidacaoID, 422);
         }
@@ -83,7 +86,7 @@ class PessoaEnderecoController extends Controller
 
     public function getEnderecoByPessoaId($id_pessoa){
         
-        $erroValidacaoID = $this->pessoaEndereco->validarId($id_pessoa);
+        $erroValidacaoID = $this->validacaoId->validarId($id_pessoa);
         if($erroValidacaoID){
             return response()->json($erroValidacaoID, 422);
         }
@@ -104,7 +107,7 @@ class PessoaEnderecoController extends Controller
 
     public function destroy($id_pessoa){
 
-        $erroValidacaoID = $this->pessoaEndereco->validarId($id_pessoa);
+        $erroValidacaoID = $this->validacaoId->validarId($id_pessoa);
         if($erroValidacaoID){
             return response()->json($erroValidacaoID, 422);
         }

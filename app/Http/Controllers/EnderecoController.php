@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Endereco;
 use App\Models\Pagination;
+use App\Models\ValidacaoId;
 use App\Repositories\EnderecoRepository;
 use Illuminate\Http\Request;
 
@@ -12,12 +13,14 @@ class EnderecoController extends Controller
     private EnderecoRepository $enderecoRepository;
     private Endereco $endereco;
     private Pagination $pagination;
+    private ValidacaoId $validacaoId;
 
-    public function __construct(EnderecoRepository $enderecoRepository, Endereco $endereco, Pagination $pagination)
+    public function __construct(EnderecoRepository $enderecoRepository, Endereco $endereco, Pagination $pagination, ValidacaoId $validacaoId)
     {
         $this->enderecoRepository = $enderecoRepository;
         $this->endereco = $endereco;
         $this->pagination = $pagination;
+        $this->validacaoId = $validacaoId;
     }
 
     public function index(Request $request)
@@ -55,7 +58,7 @@ class EnderecoController extends Controller
 
     public function show($id)
     {
-        $erroValidacaoID = $this->endereco->validarId($id);
+        $erroValidacaoID = $this->validacaoId->validarId($id);
         if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }
@@ -78,7 +81,7 @@ class EnderecoController extends Controller
     public function update(Request $request, $id)
     {
 
-        $erroValidacaoID = $this->endereco->validarId($id);
+        $erroValidacaoID = $this->validacaoId->validarId($id);
         if ($erroValidacaoID) {
             return response()->json($erroValidacaoID, 422);
         }

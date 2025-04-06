@@ -63,7 +63,7 @@ Route::middleware(['jwt.expiration'])->group(function () {
 
 
     /***********************ROTAS SERVIDOR EFETIVO****************************************/
-    Route::get('/servidor/efetivo/', [ServidorEfetivoController::class, 'getAllServidoresEfetivos']);
+    Route::get('/servidor/efetivo', [ServidorEfetivoController::class, 'getAllServidoresEfetivos']);
     Route::post('/servidor/efetivo', [ServidorEfetivoController::class, 'store']);
     Route::put('/servidor/efetivo/{pes_id}', [ServidorEfetivoController::class, 'update']);
     Route::delete('/servidor/efetivo/{pes_id}', [ServidorEfetivoController::class, 'destroy']);

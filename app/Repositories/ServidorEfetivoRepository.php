@@ -37,12 +37,20 @@ class ServidorEfetivoRepository
             ->orderBy('pes_nome') // Adicionando ordenação por nome
             ->paginate($perPage, ['*'], 'page', $page)
             ->through(function ($pessoa) {
+                $fotoUrl = null;
+                if ($pessoa->fotoPessoa) {
+                    $caminho = "pessoas/{$pessoa->pes_id}/{$pessoa->fotoPessoa->fp_hash}.{$pessoa->fotoPessoa->fp_extensao}";
+                    $fotoUrl = Traits::generatePresignedUrl($caminho);
+                }
+
                 return [
                     'nome' => $pessoa->pes_nome,
                     'idade' => Pessoa::calcularIdade($pessoa->pes_data_nascimento),
                     'unidade' => $pessoa->lotacao->unidadeLotacao->unid_nome ?? 'Sem unidade definida',
-                    'fotografia' => $pessoa->fotografia ?? null
+                    'matricula' => $pessoa->servidorEfetivo->se_matricula ?? null,
+                    'fotografia' => $fotoUrl 
                 ];
+
             });
     }
 
@@ -55,16 +63,16 @@ class ServidorEfetivoRepository
             ->with([
                 'lotacao.unidadeLotacao',
                 'servidorEfetivo',
-                'fotoPessoa' // Carrega o relacionamento com a foto
+                'fotoPessoa'
             ])
             ->orderBy('pes_nome')
             ->paginate($perPage, ['*'], 'page', $page)
             ->through(function ($pessoa) {
-                // Gera a URL assinada se existir foto
+           
                 $fotoUrl = null;
-                if ($pessoa->fotoPessoa) {
-                    $extensao = pathinfo($pessoa->fotoPessoa->fp_caminho, PATHINFO_EXTENSION);
-                    $caminho = "pessoas/{$pessoa->pes_id}/{$pessoa->fotoPessoa->fp_hash}.{$extensao}";
+                
+                if (!is_null($pessoa->fotoPessoa)) {
+                    $caminho = "pessoas/{$pessoa->pes_id}/{$pessoa->fotoPessoa->fp_hash}.{$pessoa->fotoPessoa->fp_extensao}";
                     $fotoUrl = Traits::generatePresignedUrl($caminho);
                 }
 
@@ -72,8 +80,8 @@ class ServidorEfetivoRepository
                     'nome' => $pessoa->pes_nome,
                     'idade' => Pessoa::calcularIdade($pessoa->pes_data_nascimento),
                     'unidade' => $pessoa->lotacao->unidadeLotacao->unid_nome ?? null,
-                    'matricula' => $pessoa->servidorEfetivo->se_matricula ?? null, // Adicionado matrícula
-                    'fotografia' => $fotoUrl // URL assinada
+                    'matricula' => $pessoa->servidorEfetivo->se_matricula ?? null,
+                    'fotografia' => $fotoUrl
                 ];
             });
     }

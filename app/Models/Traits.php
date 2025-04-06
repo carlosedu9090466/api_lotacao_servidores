@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Traits extends Model
 {
-    public function generatePresignedUrl(string $path, int $expiryMinutes = 5): string
+    public static function generatePresignedUrl(string $path, int $expiryMinutes = 5): string
     {
         $s3 = new S3Client([
             'version' => 'latest',

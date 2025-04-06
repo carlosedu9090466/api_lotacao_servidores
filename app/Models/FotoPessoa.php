@@ -9,35 +9,34 @@ class FotoPessoa extends Model
 {
     protected $table = 'foto_pessoa';
     protected $primaryKey = 'fp_id';
-    protected $fillable = ['pes_id', 'fp_hash', 'fp_bucket', 'fp_data'];
+    protected $fillable = ['pes_id', 'fp_hash', 'fp_bucket', 'fp_data', 'fp_extensao'];
 
 
-
-    private static function regrasFotos()
-    {
-        return [
-            'fotos.*' => 'required|image|mimes:jpeg,png,jpg|max:2048', // 2MB máximo
-            'fotos' => 'array|max:5' // Limite de 5 fotos
-        ];
-    }
-
-    private static function feedbackFotos()
-    {
-        return [
-            'fotos.*.required' => 'Cada foto é obrigatória.',
-            'fotos.*.image' => 'O arquivo deve ser uma imagem válida (JPEG, PNG, JPG).',
-            'fotos.*.mimes' => 'Apenas formatos JPEG, PNG ou JPG são permitidos.',
-            'fotos.*.max' => 'O tamanho máximo por foto é 2MB.',
-            'fotos.max' => 'Máximo de 5 fotos por upload.'
-        ];
-    }
 
     public static function validarFotos(array $dadosFotos)
     {
+        $fotos = $dadosFotos['fotos'] ?? [];
+
+        if (!is_array($fotos)) {
+            $fotos = [$fotos];
+        }
+
         $validator = Validator::make(
-            ['fotos' => $dadosFotos['fotos'] ?? []], // Extrai apenas 'fotos'
-            self::regrasFotos(),
-            self::feedbackFotos()
+            ['fotos' => $fotos],
+            [
+                'fotos' => 'required|array|min:1|max:5',
+                'fotos.*' => 'required|image|mimes:jpeg,png,jpg|max:7048',
+            ],
+            [
+                'fotos.required' => 'É necessário enviar pelo menos uma foto.',
+                'fotos.array' => 'As fotos devem estar em um array.',
+                'fotos.min' => 'Envie pelo menos uma foto.',
+                'fotos.max' => 'Máximo de 5 fotos por upload.',
+                'fotos.*.required' => 'Cada foto é obrigatória.',
+                'fotos.*.image' => 'O arquivo deve ser uma imagem válida (JPEG, PNG, JPG).',
+                'fotos.*.mimes' => 'Apenas formatos JPEG, PNG ou JPG são permitidos.',
+                'fotos.*.max' => 'O tamanho máximo por foto é 7MB.',
+            ]
         );
 
         if ($validator->fails()) {
@@ -48,19 +47,8 @@ class FotoPessoa extends Model
             ];
         }
 
-        return null;
+        return true;
     }
-
-    public static function getFileExtension($file)
-    {
-        if ($file instanceof \Illuminate\Http\UploadedFile) {
-            return strtolower($file->extension());
-        }
-        $extension = pathinfo($file->getClientOriginalName(), PATHINFO_EXTENSION);
-        return strtolower($extension ?: 'jpg'); 
-    }
-
-
 
     public function pessoa()
     {

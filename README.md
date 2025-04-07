@@ -35,12 +35,12 @@ docker exec -it api_laravel_lotacao php artisan db:seed --class=AdminUserSeeder
 2. Use as seguintes credenciais:
    - Username: `minioadmin`
    - Password: `minioadmin`
-3. Crie um bucket chamado `laravel`
+3. Apos a execução dos containers o bucket foi criado e chamado de `laravel`
 
 > Após a configuração, você poderá utilizar o bucket para armazenamento de imagens através da API.
 
 ### Credenciais do Administrador
 
 Após executar o seeder, você terá acesso com as seguintes credenciais:
-- Email: `carlosadm@gmail.com`
+- Email: `admin@gmail.com`
 - Senha: `@123@123`

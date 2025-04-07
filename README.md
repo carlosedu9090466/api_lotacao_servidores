@@ -29,6 +29,8 @@ docker exec -it api_laravel_lotacao php artisan migrate
 docker exec -it api_laravel_lotacao php artisan db:seed --class=AdminUserSeeder
 ```
 
+### 2.1 Aplicação é acessada localmente em `localhost:8000/api/nome da rota`
+
 ### 3. Configurando MinIO
 
 1. Acesse o MinIO em `localhost:9001`
